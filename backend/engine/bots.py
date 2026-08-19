@@ -339,6 +339,7 @@ class BotManager:
         self._dirty: set[str] = set()
         self._last_save = 0.0
         self._retain_task: asyncio.Task | None = None
+        self._load()  # eager: seed paper bots before HTTP accepts traffic
 
     # ------------------------------------------------------------------
     # Lifecycle + persistence

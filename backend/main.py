@@ -246,13 +246,20 @@ real_bot_manager = RealBotManager(hub, bot_manager)
 
 
 _boot_task: asyncio.Task | None = None
+_services_ready = False
 
 
 async def _startup_services() -> None:
-    await hub.start()
-    await bot_manager.start()
-    await real_bot_manager.start()
-    logger.info("Twap Hunter services ready")
+    global _services_ready
+    try:
+        await hub.start()
+        await bot_manager.start()
+        await real_bot_manager.start()
+        _services_ready = True
+        logger.info("Twap Hunter services ready")
+    except Exception:
+        logger.exception("background startup failed")
+        raise
 
 
 @asynccontextmanager
@@ -282,7 +289,12 @@ app.add_middleware(SiteAuthMiddleware)
 
 @app.get("/health")
 async def health() -> dict:
-    return {"ok": True, "auth": auth_enabled()}
+    return {
+        "ok": True,
+        "auth": auth_enabled(),
+        "ready": _services_ready,
+        "bots": len(bot_manager.bots),
+    }
 
 
 @app.get("/login")

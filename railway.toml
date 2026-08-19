@@ -5,7 +5,7 @@ builder = "RAILPACK"
 MISE_PYTHON_GITHUB_ATTESTATIONS = "false"
 
 [deploy]
-startCommand = "python run.py"
+startCommand = "python -u run.py"
 healthcheckPath = "/health"
 healthcheckTimeout = 120
 restartPolicyType = "ON_FAILURE"
