@@ -33,6 +33,7 @@ from backend.auth import (
     verify_session,
 )
 from backend.config import ASSETS, CONFIG, DEFAULT_ASSET
+from backend.data_dir import data_dir_status
 from backend.engine.bots import (
     BotManager, STRATEGIES, default_params, sanitize_params, strategy_catalog,
 )
@@ -294,6 +295,7 @@ async def health() -> dict:
         "auth": auth_enabled(),
         "ready": _services_ready,
         "bots": len(bot_manager.bots),
+        "storage": data_dir_status(),
     }
 
 

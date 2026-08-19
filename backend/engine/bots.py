@@ -22,6 +22,7 @@ from pathlib import Path
 import httpx
 
 from backend.config import ASSETS, CONFIG
+from backend.data_dir import data_dir
 from backend.engine.pipeline import round_label_et
 from backend.feeds.activity import ActivityFeed
 from backend.feeds.polymarket import parse_resolution
@@ -29,7 +30,7 @@ from backend.storage import storage
 
 logger = logging.getLogger(__name__)
 
-LEGACY_JSON = Path(__file__).resolve().parent.parent.parent / "data" / "bots.json"
+LEGACY_JSON = data_dir() / "bots.json"
 
 FEE_RATE = 0.07            # Polymarket crypto_fees_v2: taker only
 MIN_ORDER_SHARES = 1.0     # paper: allow $1 lots (real CLOB min is 5 shares)
