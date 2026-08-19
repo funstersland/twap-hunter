@@ -1,0 +1,48 @@
+# Keep the Railway build context tiny (~1 MB instead of ~100 MB).
+# A bloated context is a common cause of builder resource failures
+# ("runc run failed: container process is already dead").
+
+# Python virtualenv (Windows binaries — useless in a Linux container)
+.venv/
+venv/
+env/
+
+# Local runtime data (SQLite DB, bot state) — created fresh in the container
+data/
+*.db
+*.db-wal
+*.db-shm
+
+# Caches / bytecode
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# VCS + editor + OS
+.git/
+.gitignore
+.gitattributes
+.idea/
+.vscode/
+.claude/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Secrets / local-only config (never ship these to the image)
+.env
+.env.*
+!.env.example
+
+# Node (frontend is static, no build step — but just in case)
+node_modules/
+
+# Docs / scripts not needed at runtime
+README.md
+keep_alive.cmd
+run.py
+start.sh
+mise.toml
