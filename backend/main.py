@@ -24,6 +24,14 @@ from fastapi import Body, FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from backend.auth import (
+    SiteAuthMiddleware,
+    auth_enabled,
+    check_password,
+    clear_auth_cookie,
+    set_auth_cookie,
+    verify_session,
+)
 from backend.config import ASSETS, CONFIG, DEFAULT_ASSET
 from backend.engine.bots import (
     BotManager, STRATEGIES, default_params, sanitize_params, strategy_catalog,
@@ -252,6 +260,34 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Twap Hunter", lifespan=lifespan)
+app.add_middleware(SiteAuthMiddleware)
+
+
+@app.get("/health")
+async def health() -> dict:
+    return {"ok": True, "auth": auth_enabled()}
+
+
+@app.get("/login")
+async def login_page() -> FileResponse:
+    return FileResponse(FRONTEND_DIR / "login.html")
+
+
+@app.post("/api/login")
+async def login_api(payload: dict = Body(...)):
+    password = str(payload.get("password", ""))
+    if not check_password(password):
+        return JSONResponse({"error": "wrong password"}, status_code=401)
+    resp = JSONResponse({"ok": True})
+    set_auth_cookie(resp)
+    return resp
+
+
+@app.post("/api/logout")
+async def logout_api():
+    resp = JSONResponse({"ok": True})
+    clear_auth_cookie(resp)
+    return resp
 
 
 @app.get("/api/assets")
@@ -569,6 +605,9 @@ async def bot_detail_page(bot_id: str) -> FileResponse:
 
 @app.websocket("/ws")
 async def ws_endpoint(ws: WebSocket) -> None:
+    if auth_enabled() and not verify_session(ws.cookies.get("twap_session")):
+        await ws.close(code=4401)
+        return
     await ws.accept()
     asset = str(ws.query_params.get("asset", DEFAULT_ASSET)).upper()
     if asset not in ASSETS:

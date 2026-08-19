@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Login · Twap Hunter</title>
+<style>
+  :root { --bg:#0b0e14; --panel:#121722; --border:#1e2636; --text:#d6dbe8; --muted:#6b7488; --amber:#f5b942; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: grid; place-items: center;
+    background: var(--bg); color: var(--text);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  .card {
+    width: min(360px, 92vw); background: var(--panel); border: 1px solid var(--border);
+    border-radius: 6px; padding: 24px;
+  }
+  h1 { margin: 0 0 6px; font-size: 14px; letter-spacing: 2px; color: var(--amber); }
+  p { margin: 0 0 18px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+  label { display: block; font-size: 10px; color: var(--muted); margin-bottom: 6px; letter-spacing: 1px; }
+  input {
+    width: 100%; padding: 10px 12px; border-radius: 4px;
+    border: 1px solid var(--border); background: #0b0e14; color: var(--text);
+    font: inherit; margin-bottom: 14px;
+  }
+  button {
+    width: 100%; padding: 10px 12px; border: 0; border-radius: 4px;
+    background: var(--amber); color: #0b0e14; font: inherit; font-weight: 700; cursor: pointer;
+  }
+  button:hover { filter: brightness(1.05); }
+  .err { color: #f0475c; font-size: 11px; min-height: 16px; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+  <form class="card" id="form">
+    <h1>TWAP HUNTER</h1>
+    <p>This deployment is password protected. Enter the site password to continue.</p>
+    <div class="err" id="err"></div>
+    <label for="pw">PASSWORD</label>
+    <input id="pw" type="password" autocomplete="current-password" autofocus required />
+    <button type="submit">Enter</button>
+  </form>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const next = params.get("next") || "/";
+    document.getElementById("form").onsubmit = async (e) => {
+      e.preventDefault();
+      const err = document.getElementById("err");
+      err.textContent = "";
+      const password = document.getElementById("pw").value;
+      try {
+        const resp = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password }),
+          credentials: "same-origin",
+        });
+        if (!resp.ok) {
+          const j = await resp.json().catch(() => ({}));
+          err.textContent = j.error || "Wrong password";
+          return;
+        }
+        location.href = next;
+      } catch (_e) {
+        err.textContent = "Login failed — try again";
+      }
+    };
+  </script>
+</body>
+</html>
