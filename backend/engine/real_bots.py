@@ -33,6 +33,7 @@ class RealBotManager:
         self._rt: dict[str, dict] = {}
         self._dirty: set[str] = set()
         self._loop_task: asyncio.Task | None = None
+        self._boot_task: asyncio.Task | None = None
         self._normalize_statuses()
         for bot in self.bots.values():
             self._ensure_fields(bot)
@@ -55,14 +56,31 @@ class RealBotManager:
 
     async def start(self) -> None:
         self._loop_task = asyncio.create_task(self._loop(), name="real-bot-loop")
+        self._boot_task = asyncio.create_task(self._boot_running(), name="real-bot-boot")
+
+    async def _boot_running(self) -> None:
         for bot in self.bots.values():
-            if bot.get("status") == "running" and bot.get("asset") != COPY_ALL:
+            if bot.get("status") != "running" or bot.get("asset") == COPY_ALL:
+                continue
+            try:
                 await self._hub.retain(bot["asset"], bot["id"])
-                account = storage.get_account(bot.get("account_id", ""))
-                if account:
+            except Exception:
+                logger.exception("retain failed for real bot %s", bot["id"])
+            account = storage.get_account(bot.get("account_id", ""))
+            if account:
+                try:
                     self._sync_balance(bot, account)
+                except Exception:
+                    logger.exception("balance sync failed for real bot %s", bot["id"])
 
     async def stop(self) -> None:
+        if self._boot_task is not None:
+            self._boot_task.cancel()
+            try:
+                await self._boot_task
+            except (asyncio.CancelledError, Exception):
+                pass
+            self._boot_task = None
         if self._loop_task is not None:
             self._loop_task.cancel()
             try:

@@ -47,6 +47,26 @@ def bot_assets(bot: dict) -> list[str]:
         return list(ASSETS.keys())
     return [bot["asset"]]
 
+
+# Pre-created on fresh installs (e.g. Railway) — matches live BTC lock-in cut bot.
+SEED_PAPER_BOTS: list[dict] = [
+    {
+        "name": "BTC Lock In Small Loss",
+        "asset": "BTC",
+        "strategy": "twap_lockin_cut",
+        "params": {
+            "entry_window_s": 90,
+            "min_margin_bps": 0.3,
+            "max_entry_cents": 95,
+            "cut_margin_bps": 0.5,
+            "cut_confirm_s": 2,
+            "order_usd": 1,
+        },
+        "status": "running",
+        "start_balance": 1000.0,
+    },
+]
+
 # ---------------------------------------------------------------------------
 # Strategy catalog
 # ---------------------------------------------------------------------------
@@ -318,6 +338,7 @@ class BotManager:
         self._http: httpx.AsyncClient | None = None
         self._dirty: set[str] = set()
         self._last_save = 0.0
+        self._retain_task: asyncio.Task | None = None
 
     # ------------------------------------------------------------------
     # Lifecycle + persistence
@@ -327,16 +348,33 @@ class BotManager:
         self._http = httpx.AsyncClient(timeout=15.0)
         self.activity.start()
         self._load()
-        for bot in self.bots.values():
-            if bot["status"] == "running":
-                for asset in bot_assets(bot):
-                    await self._hub.retain(asset, bot["id"])
         self._task = asyncio.create_task(self._loop(), name="bot-manager")
+        self._retain_task = asyncio.create_task(
+            self._retain_running(), name="bot-retain",
+        )
         if self.bots:
             logger.info("bot manager: %d bot(s) loaded", len(self.bots))
 
+    async def _retain_running(self) -> None:
+        """Start market pipelines in the background so HTTP /health is instant."""
+        for bot in self.bots.values():
+            if bot["status"] != "running":
+                continue
+            for asset in bot_assets(bot):
+                try:
+                    await self._hub.retain(asset, bot["id"])
+                except Exception:
+                    logger.exception("retain failed for %s on %s", bot["id"], asset)
+
     async def stop(self) -> None:
         await self.activity.stop()
+        if self._retain_task is not None:
+            self._retain_task.cancel()
+            try:
+                await self._retain_task
+            except (asyncio.CancelledError, Exception):
+                pass
+            self._retain_task = None
         if self._task is not None:
             self._task.cancel()
             try:
@@ -364,6 +402,35 @@ class BotManager:
                 logger.info("migrating copy bot %s to ALL markets", bot["name"])
                 bot["asset"] = COPY_ALL
                 storage.save_bot(bot)
+        self._seed_defaults()
+
+    def _seed_defaults(self) -> None:
+        """Ensure starter paper bots exist on fresh deployments."""
+        existing = {
+            (b.get("name"), b.get("asset"), b.get("strategy"))
+            for b in self.bots.values()
+        }
+        for spec in SEED_PAPER_BOTS:
+            key = (spec["name"], spec["asset"], spec["strategy"])
+            if key in existing:
+                continue
+            bot = {
+                "id": "b_" + uuid.uuid4().hex[:8],
+                "name": spec["name"][:40],
+                "asset": spec["asset"],
+                "strategy": spec["strategy"],
+                "params": sanitize_params(spec["strategy"], spec["params"]),
+                "status": spec.get("status", "stopped"),
+                "start_balance": float(spec.get("start_balance", 1000.0)),
+                "balance": float(spec.get("start_balance", 1000.0)),
+                "position": None,
+                "trades": [],
+                "stats": {"rounds": 0, "wins": 0, "losses": 0, "fees": 0.0},
+                "created_ms": time.time() * 1000.0,
+            }
+            self.bots[bot["id"]] = bot
+            storage.save_bot(bot)
+            logger.info("seeded paper bot %s (%s)", bot["name"], bot["id"])
 
     def _migrate_legacy_json(self) -> None:
         """One-time import of data/bots.json into SQLite (with trades)."""
