@@ -1,6 +1,9 @@
 [build]
 builder = "RAILPACK"
 
+[build.env]
+MISE_PYTHON_GITHUB_ATTESTATIONS = "false"
+
 [deploy]
 startCommand = "bash start.sh"
 healthcheckPath = "/api/bots"
