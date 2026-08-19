@@ -3,10 +3,9 @@ builder = "RAILPACK"
 
 [build.env]
 MISE_PYTHON_GITHUB_ATTESTATIONS = "false"
+PYTHONUNBUFFERED = "1"
 
 [deploy]
-startCommand = "python3 -m backend"
-healthcheckPath = "/health"
-healthcheckTimeout = 120
+startCommand = "python -u -m backend"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10

@@ -1,1 +1,1 @@
-web: python3 -m backend
+web: python -u -m backend
