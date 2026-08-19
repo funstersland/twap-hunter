@@ -1,1 +1,1 @@
-web: python3 -u run.py
+web: python3 -m backend
