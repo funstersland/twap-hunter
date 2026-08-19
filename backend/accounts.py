@@ -14,9 +14,11 @@ from pathlib import Path
 from cryptography.fernet import Fernet, InvalidToken
 from eth_account import Account
 
+from backend.data_dir import data_dir
+
 logger = logging.getLogger(__name__)
 
-KEY_FILE = Path(__file__).resolve().parent.parent / "data" / ".encryption_key"
+KEY_FILE = data_dir() / ".encryption_key"
 _ADDR_RE = re.compile(r"^0x[a-fA-F0-9]{40}$")
 
 

@@ -5,8 +5,8 @@ builder = "RAILPACK"
 MISE_PYTHON_GITHUB_ATTESTATIONS = "false"
 
 [deploy]
-startCommand = "bash start.sh"
+startCommand = "python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
 healthcheckPath = "/health"
-healthcheckTimeout = 120
+healthcheckTimeout = 180
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10

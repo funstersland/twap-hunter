@@ -19,9 +19,11 @@ import threading
 import time
 from pathlib import Path
 
+from backend.data_dir import data_dir
+
 logger = logging.getLogger(__name__)
 
-DB_PATH = Path(__file__).resolve().parent.parent / "data" / "twaphunter.db"
+DB_PATH = data_dir() / "twaphunter.db"
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS bots (

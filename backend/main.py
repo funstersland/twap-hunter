@@ -245,15 +245,32 @@ bot_manager = BotManager(hub)
 real_bot_manager = RealBotManager(hub, bot_manager)
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
+_boot_task: asyncio.Task | None = None
+
+
+async def _startup_services() -> None:
     await hub.start()
     await bot_manager.start()
     await real_bot_manager.start()
-    logger.info("Twap Hunter up — pipelines start on demand per client")
+    logger.info("Twap Hunter services ready")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global _boot_task
+    _boot_task = asyncio.create_task(_startup_services(), name="app-boot")
+    logger.info("Twap Hunter accepting HTTP (services booting in background)")
     try:
         yield
     finally:
+        task = _boot_task
+        _boot_task = None
+        if task is not None and not task.done():
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
         await real_bot_manager.stop()
         await bot_manager.stop()
         await hub.stop()

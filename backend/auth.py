@@ -22,6 +22,12 @@ AUTH_MAX_AGE_S = 30 * 24 * 3600  # 30 days
 _PUBLIC_PATHS = frozenset({"/login", "/api/login", "/health"})
 
 
+def _is_public(path: str) -> bool:
+    if path in _PUBLIC_PATHS or path == "/style.css":
+        return True
+    return path.rstrip("/") == "/health"
+
+
 def _load_dotenv() -> None:
     env_path = Path(__file__).resolve().parent.parent / ".env"
     if not env_path.is_file():
@@ -97,7 +103,7 @@ class SiteAuthMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         path = request.url.path
-        if path in _PUBLIC_PATHS or path == "/style.css":
+        if _is_public(path):
             return await call_next(request)
 
         if verify_session(request.cookies.get(AUTH_COOKIE)):
