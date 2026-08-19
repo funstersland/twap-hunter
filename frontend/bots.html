@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Bots · Twap Hunter</title>
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<div id="app">
+
+  <header id="topbar">
+    <div class="brand">TWAP<span>HUNTER</span></div>
+    <nav id="page-nav">
+      <a href="/" class="nav-link">TERMINAL</a>
+      <a href="/bots" class="nav-link active">BOTS</a>
+      <a href="/real" class="nav-link">REAL</a>
+    </nav>
+    <div class="topbar-right">
+      <span class="paper-badge">PAPER TRADING — NO REAL MONEY</span>
+      <button id="add-bot-btn" class="primary-btn">+ ADD BOT</button>
+    </div>
+  </header>
+
+  <main id="bots-main">
+    <div id="bots-filter" class="bots-filter"></div>
+    <div class="leaderboard-row">
+      <div class="card lb-card">
+        <div class="card-title"><i class="lb-dot up-dot"></i>TOP PROFIT</div>
+        <table class="lb-table">
+          <thead><tr><th>RANK</th><th>NAME</th><th>P&amp;L</th><th>WIN %</th></tr></thead>
+          <tbody id="lb-profit"></tbody>
+        </table>
+      </div>
+      <div class="card lb-card">
+        <div class="card-title"><i class="lb-dot down-dot"></i>TOP LOSS</div>
+        <table class="lb-table">
+          <thead><tr><th>RANK</th><th>NAME</th><th>P&amp;L</th><th>WIN %</th></tr></thead>
+          <tbody id="lb-loss"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="bots-grid"></div>
+    <div id="bots-empty" class="bots-empty" style="display:none">
+      No bots yet — hit <b>+ ADD BOT</b>, pick a strategy and a market,
+      and watch it trade the live rounds with paper money.
+    </div>
+  </main>
+</div>
+
+<!-- add-bot modal -->
+<div id="modal-backdrop" class="modal-backdrop" style="display:none">
+  <div class="modal">
+    <div class="modal-head">
+      <span>ADD BOT</span>
+      <button id="modal-close" class="icon-btn">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label>Market</label>
+        <div id="asset-pick" class="pick-row"></div>
+      </div>
+      <div class="form-row">
+        <label>Strategy</label>
+        <div id="strategy-pick" class="strategy-cards"></div>
+      </div>
+      <div class="form-row">
+        <label>Name</label>
+        <input id="bot-name" type="text" placeholder="auto" maxlength="40" />
+      </div>
+      <div class="form-row">
+        <label>Starting balance ($)</label>
+        <input id="bot-balance" type="number" value="1000" min="10" max="100000" />
+      </div>
+      <div class="form-row">
+        <label>Parameters</label>
+        <div id="param-form" class="param-form"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <label class="chk"><input id="start-now" type="checkbox" checked /> start immediately</label>
+      <button id="create-bot" class="primary-btn">CREATE BOT</button>
+    </div>
+  </div>
+</div>
+
+<!-- per-bot settings modal -->
+<div id="settings-backdrop" class="modal-backdrop" style="display:none">
+  <div class="modal">
+    <div class="modal-head">
+      <span id="settings-title">BOT SETTINGS</span>
+      <button id="settings-close" class="icon-btn">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label>Name</label>
+        <input id="settings-name" type="text" maxlength="40" />
+      </div>
+      <div class="form-row">
+        <label>Parameters</label>
+        <div id="settings-params" class="param-form"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button id="settings-reset" class="mini-btn danger">↺ RESET (fresh balance, clears history)</button>
+      <button id="settings-save" class="primary-btn">SAVE</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="/js/bots.js"></script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Twap Hunter</title>
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<div id="app">
+
+  <header id="topbar">
+    <div class="brand">TWAP<span>HUNTER</span></div>
+    <nav id="asset-tabs"></nav>
+    <a href="/bots" class="nav-link" style="margin-left:6px">BOTS</a>
+    <a href="/real" class="nav-link" style="margin-left:4px">REAL</a>
+    <div class="round-box">
+      <div id="round-label" class="round-label">—</div>
+      <div id="countdown" class="countdown">--:--</div>
+    </div>
+    <div class="round-progress"><div id="round-progress-fill"></div></div>
+    <div class="health">
+      <span class="dot-row" id="health-binance"><i class="dot"></i>TICKS</span>
+      <span class="dot-row" id="health-rtds"><i class="dot"></i>ORACLE</span>
+      <span class="dot-row" id="health-clob"><i class="dot"></i>BOOK</span>
+      <span class="dot-row" id="health-ws"><i class="dot"></i>WS</span>
+    </div>
+  </header>
+
+  <main id="layout">
+    <section id="content">
+
+      <div class="chart-card" id="twap-card">
+        <div class="chart-head">
+          <span class="chart-title">ORACLE / TWAP <span class="muted" id="twap-lookback"></span></span>
+          <span class="legend">
+            <i class="sw sw-chainlink"></i>Chainlink
+            <i class="sw sw-twap"></i>TWAP
+            <i class="sw sw-twap30"></i>TWAP 30s
+            <i class="sw sw-ptb"></i>Price to beat
+            <i class="sw sw-pred"></i>Prediction
+          </span>
+        </div>
+        <canvas id="chart-twap"></canvas>
+      </div>
+
+      <div class="chart-row">
+        <div class="chart-card" id="tick-card">
+          <div class="chart-head">
+            <span class="chart-title">EXCHANGE TICKS <span class="muted" id="tick-symbol"></span></span>
+            <span class="legend"><i class="sw sw-buy"></i>Buy vol <i class="sw sw-sell"></i>Sell vol</span>
+          </div>
+          <canvas id="chart-ticks"></canvas>
+        </div>
+        <div class="chart-card" id="quote-card">
+          <div class="chart-head">
+            <span class="chart-title">UP QUOTE (¢)</span>
+            <span class="legend"><i class="sw sw-bid"></i>Bid <i class="sw sw-ask"></i>Ask</span>
+          </div>
+          <canvas id="chart-quotes"></canvas>
+        </div>
+      </div>
+
+      <div id="panels">
+
+        <div class="card" id="card-prices">
+          <div class="card-title">PRICES</div>
+          <div class="big-price" id="p-chainlink">—</div>
+          <div class="kv"><span>Binance last</span><b id="p-last">—</b></div>
+          <div class="kv"><span>TWAP <i id="p-lookback"></i></span><b id="p-twap">—</b></div>
+          <div class="kv"><span>TWAP 30s</span><b id="p-twap30">—</b></div>
+          <div class="kv ptb-row"><span>PRICE TO BEAT</span><b id="p-ptb">—</b></div>
+          <div class="kv"><span>PTB source</span><b id="p-ptb-src" class="muted">—</b></div>
+        </div>
+
+        <div class="card" id="card-deltas">
+          <div class="card-title">DELTAS vs PRICE TO BEAT</div>
+          <div class="delta-block">
+            <div class="delta-name">TWAP Δ <span class="muted">(resolves the round)</span></div>
+            <div class="delta-value" id="d-twap">—</div>
+            <div class="delta-bps" id="d-twap-bps">—</div>
+          </div>
+          <div class="delta-block">
+            <div class="delta-name">Oracle price Δ</div>
+            <div class="delta-value sm" id="d-price">—</div>
+            <div class="delta-bps" id="d-price-bps">—</div>
+          </div>
+        </div>
+
+        <div class="card" id="card-volume">
+          <div class="card-title">SESSION VOLUME <span class="muted">(this round)</span></div>
+          <div class="kv"><span>Buy</span><b class="up" id="v-buy">—</b></div>
+          <div class="kv"><span>Sell</span><b class="down" id="v-sell">—</b></div>
+          <div class="kv"><span>Net</span><b id="v-net">—</b></div>
+          <div class="kv"><span>Trades</span><b id="v-trades">—</b></div>
+          <div class="imb-label"><span>Imbalance</span><b id="v-imb">—</b></div>
+          <div class="imb-bar"><div class="imb-mid"></div><div id="v-imb-fill"></div></div>
+          <div class="mini-imbs" id="v-imb-windows"></div>
+        </div>
+
+        <div class="card" id="card-pressure">
+          <div class="card-title">VOLUME PRESSURE</div>
+          <div class="pressure-score" id="pr-score">—</div>
+          <div class="pressure-bar"><div class="imb-mid"></div><div id="pr-fill"></div></div>
+          <div class="pr-components" id="pr-components"></div>
+        </div>
+
+        <div class="card" id="card-momentum">
+          <div class="card-title">MOMENTUM</div>
+          <table class="mom-table"><tbody id="mom-body"></tbody></table>
+          <div class="kv"><span>Tick velocity</span><b id="m-velocity">—</b></div>
+          <div class="kv"><span>Up-tick ratio</span><b id="m-direction">—</b></div>
+        </div>
+
+        <div class="card" id="card-prediction">
+          <div class="card-title">TWAP PREDICTION <span class="muted" id="pred-horizon"></span></div>
+          <div class="kv"><span>TWAP in +30s</span><b id="pred-h30">—</b></div>
+          <div class="kv"><span>Final TWAP @ end</span><b id="pred-final">—</b></div>
+          <div class="pred-dirs">
+            <div class="pred-dir" id="pred-our-dir"><span>MODEL</span><b>—</b></div>
+            <div class="pred-dir" id="pred-mkt-dir"><span>MARKET</span><b>—</b></div>
+          </div>
+          <div class="kv"><span>+30s accuracy</span><b id="pred-acc">—</b></div>
+          <div class="kv"><span>Round-end hits (model)</span><b id="pred-end-acc">—</b></div>
+          <div class="kv"><span>Round-end hits (market)</span><b id="pred-mkt-acc">—</b></div>
+        </div>
+
+        <div class="card" id="card-market">
+          <div class="card-title">POLYMARKET</div>
+          <div class="question" id="mk-question">—</div>
+          <div class="quote-cards">
+            <div class="quote-side up-side">
+              <div class="side-name">UP</div>
+              <div class="side-price" id="q-up">—</div>
+              <div class="side-ba"><span id="q-up-bid">—</span> / <span id="q-up-ask">—</span></div>
+              <div class="side-size" id="q-up-size">—</div>
+            </div>
+            <div class="quote-side down-side">
+              <div class="side-name">DOWN</div>
+              <div class="side-price" id="q-down">—</div>
+              <div class="side-ba"><span id="q-down-bid">—</span> / <span id="q-down-ask">—</span></div>
+              <div class="side-size" id="q-down-size">—</div>
+            </div>
+          </div>
+          <div class="kv"><span>Last trade (UP)</span><b id="q-last">—</b></div>
+          <div class="kv"><span>Spread (UP)</span><b id="q-spread">—</b></div>
+        </div>
+
+      </div>
+    </section>
+
+    <aside id="timeline">
+      <div class="tl-head">EVENT TIMELINE</div>
+      <div id="tl-list"></div>
+    </aside>
+  </main>
+</div>
+
+<script type="module" src="/js/app.js"></script>
+</body>
+</html>

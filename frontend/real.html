@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Real · Twap Hunter</title>
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<div id="app">
+
+  <header id="topbar">
+    <div class="brand">TWAP<span>HUNTER</span></div>
+    <nav id="page-nav">
+      <a href="/" class="nav-link">TERMINAL</a>
+      <a href="/bots" class="nav-link">BOTS</a>
+      <a href="/real" class="nav-link active">REAL</a>
+    </nav>
+    <div class="topbar-right">
+      <span class="real-badge">REAL TRADING — LIVE ORDERS</span>
+      <button id="add-account-btn" class="mini-btn">+ ADD ACCOUNT</button>
+      <button id="import-bot-btn" class="primary-btn">+ IMPORT BOT</button>
+    </div>
+  </header>
+
+  <main id="real-main">
+    <section class="real-section">
+      <div class="section-head">
+        <h2>Accounts</h2>
+        <span class="muted">Live portfolio, positions, and PnL from Polymarket</span>
+      </div>
+      <div id="accounts-grid" class="accounts-grid"></div>
+      <div id="accounts-empty" class="bots-empty" style="display:none">
+        No accounts yet — hit <b>+ ADD ACCOUNT</b> and enter your wallet address and private key.
+      </div>
+    </section>
+
+    <section class="real-section">
+      <div class="section-head">
+        <h2>Real Bots</h2>
+        <span class="muted">Strategy configs linked to accounts — trades and PnL from the live wallet</span>
+      </div>
+      <div id="real-bots-grid"></div>
+      <div id="real-bots-empty" class="bots-empty" style="display:none">
+        No real bots yet — import a bot from the <a href="/bots">paper bots</a> page to get started.
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- add-account modal -->
+<div id="account-backdrop" class="modal-backdrop" style="display:none">
+  <div class="modal">
+    <div class="modal-head">
+      <span>ADD POLYMARKET ACCOUNT</span>
+      <button id="account-close" class="icon-btn">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label>Label</label>
+        <input id="account-label" type="text" placeholder="Main wallet" maxlength="40" />
+      </div>
+      <div class="form-row">
+        <label>Address</label>
+        <input id="account-address" type="text" placeholder="0x…" autocomplete="off" />
+      </div>
+      <div class="form-row">
+        <label>Private key</label>
+        <input id="account-key" type="password" placeholder="0x… or hex" autocomplete="off" />
+        <span class="field-hint muted">Stored encrypted locally — never sent back to the browser</span>
+      </div>
+      <div id="account-derived" class="derived-preview" style="display:none"></div>
+    </div>
+    <div class="modal-foot">
+      <button id="account-save" class="primary-btn">SAVE ACCOUNT</button>
+    </div>
+  </div>
+</div>
+
+<!-- import-bot modal -->
+<div id="import-backdrop" class="modal-backdrop" style="display:none">
+  <div class="modal modal-wide">
+    <div class="modal-head">
+      <span>IMPORT FROM PAPER BOT</span>
+      <button id="import-close" class="icon-btn">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label>Paper bot</label>
+        <div id="paper-bot-pick" class="paper-bot-list"></div>
+      </div>
+      <div class="form-row">
+        <label>Account</label>
+        <select id="import-account" class="account-select"></select>
+      </div>
+      <div class="form-row">
+        <label>Name (optional)</label>
+        <input id="import-name" type="text" placeholder="same as paper bot" maxlength="40" />
+      </div>
+      <div id="import-preview" class="import-preview"></div>
+    </div>
+    <div class="modal-foot">
+      <button id="import-save" class="primary-btn">IMPORT BOT</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="/js/real.js"></script>
+</body>
+</html>
